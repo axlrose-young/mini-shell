@@ -4,34 +4,56 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 int main(){
 	while(true){
-		char *buffer = getlogin();
-		printf("[%s]$ ",buffer);
+		//getting username
+		char *login = getenv("USER");
+				
+		//getting cwd
+		char dir[256];
+		getcwd(dir,sizeof(dir));
 		
+		//printing PS1
+		printf("[%s %s]$ ",login,dir);
+
 		//getting input
-		char commands[50];
+		char commands[100];
 		fgets(commands, sizeof(commands), stdin);
 		commands[strlen(commands) - 1] = '\0';
 				
 		//converting to individual commands (array of pointers)
-		int prevchar = 0;
+		//CAN'T HANDLE MIXED QUOTES YET
+		bool intoken = false;
 		char *argv[64];
 		int index = 0;
+		bool inquotes = false;
 		for(int i = 0; commands[i] != '\0'; i++){
-			if((commands[i] != ' ' || commands[i] != '\t') && prevchar == 0){
-				argv[index] = &commands[i];
-				prevchar = 1;
-				index++;
-			}
-			else if(commands[i] == ' '){
+			if(commands[i] == '"'){
+				if(inquotes){	//ending quotes
+					commands[i] = '\0';
+					inquotes = false;
+					intoken = false;
+				}else{	//starting quotes
+					inquotes = true;
+					intoken = true;
+					argv[index] = &commands[i+1];
+					index++;
+				}
+			}else if(inquotes){
+				continue;
+			}else if(isspace(commands[i])){
+				intoken = false;
 				commands[i] = '\0';
-				prevchar = 0;
+			}else if(!intoken){
+				argv[index] = &commands[i];
+				index++;
+				intoken = true;
 			}
 		}
 		argv[index] = NULL;
-		
+
 		//getting sizeof argv[]
 		int count = 0;	
 		for(int i = 0; argv[i] != NULL; i++){
@@ -52,7 +74,6 @@ int main(){
 			}else if(count == 3){
 				printf("cd: too many arguments\n");
 			}else{
-				puts("changing dirs...");
 				chdir(argv[1]);
 			}
 		}
@@ -92,5 +113,3 @@ int main(){
 	}
 	return 0;	
 }
-
-
