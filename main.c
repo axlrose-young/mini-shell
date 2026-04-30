@@ -5,51 +5,65 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <errno.h>
+
+extern int errno;
 
 int main(){
 	while(true){
 		//getting username
 		char *login = getenv("USER");
-				
+		if(login == NULL){
+			login = "unkown";
+		}
+
 		//getting cwd
 		char dir[256];
-		getcwd(dir,sizeof(dir));
+		if(getcwd(dir,sizeof(dir)) == NULL){
+			perror("Error");
+			strcpy(dir,"??");
+		}
 		
 		//printing PS1
 		printf("[%s %s]$ ",login,dir);
 
 		//getting input
-		char commands[100];
-		fgets(commands, sizeof(commands), stdin);
+		char *commands = NULL;
+		size_t n = 0;
+		getline(&commands,&n,stdin);
 		commands[strlen(commands) - 1] = '\0';
-				
+		if(commands[0] == '\0'){
+			continue;
+		}
+
 		//converting to individual commands (array of pointers)
-		//CAN'T HANDLE MIXED QUOTES YET
-		bool intoken = false;
 		char *argv[64];
 		int index = 0;
+		bool inword = false;
 		bool inquotes = false;
 		for(int i = 0; commands[i] != '\0'; i++){
 			if(commands[i] == '"'){
-				if(inquotes){	//ending quotes
-					commands[i] = '\0';
-					inquotes = false;
-					intoken = false;
-				}else{	//starting quotes
-					inquotes = true;
-					intoken = true;
+				if(inquotes == false){	//starting quotes
 					argv[index] = &commands[i+1];
+					inquotes = true;
 					index++;
+				}else{	//ending quotes
+					commands[i] = '\0';
+						inquotes = false;
 				}
 			}else if(inquotes){
 				continue;
+			}else if(!isspace(commands[i])){
+				if(inword == false){
+					argv[index] = &commands[i];
+					inword = true;
+					index++;
+				}
 			}else if(isspace(commands[i])){
-				intoken = false;
-				commands[i] = '\0';
-			}else if(!intoken){
-				argv[index] = &commands[i];
-				index++;
-				intoken = true;
+				if(inword){
+					inword = false;
+					commands[i] = '\0';
+				}
 			}
 		}
 		argv[index] = NULL;
@@ -64,7 +78,8 @@ int main(){
 		char *home;
 		home = getenv("HOME");
 		if(home == NULL){
-			printf("Could not get home dir\n");
+			puts("Could not get home directory");
+			strcpy(home,"/");
 		}
 
 		//cd function
@@ -72,7 +87,7 @@ int main(){
 			if(count == 1){
 				chdir(home);
 			}else if(count == 3){
-				printf("cd: too many arguments\n");
+				puts("cd: too many arguments");
 			}else{
 				chdir(argv[1]);
 			}
@@ -102,14 +117,15 @@ int main(){
 		int pid;
 		pid = fork();
 		if(pid == -1){
-			printf("Error forking\n");
+			perror("Error");
+			continue;
 		}else if(pid != 0){
 			wait(NULL);
 		}else{
 			execvp(argv[0],argv);
 		}
 
-		
+		free(commands);	//getline	
 	}
 	return 0;	
 }
