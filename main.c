@@ -1,11 +1,11 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <errno.h>
+#include "parser.h"
+#include "builtin.h"
 
 extern int errno;
 
@@ -28,90 +28,25 @@ int main(){
 		printf("[%s %s]$ ",login,dir);
 
 		//getting input
-		char *commands = NULL;
+		char *input = NULL;
 		size_t n = 0;
-		getline(&commands,&n,stdin);
-		commands[strlen(commands) - 1] = '\0';
-		if(commands[0] == '\0'){
+		getline(&input,&n,stdin);
+		input[strlen(input) - 1] = '\0';
+		if(input[0] == '\0'){
 			continue;
 		}
 
 		//converting to individual commands (array of pointers)
 		char *argv[64];
-		int index = 0;
-		bool inword = false;
-		bool inquotes = false;
-		for(int i = 0; commands[i] != '\0'; i++){
-			if(commands[i] == '"'){
-				if(inquotes == false){	//starting quotes
-					argv[index] = &commands[i+1];
-					inquotes = true;
-					index++;
-				}else{	//ending quotes
-					commands[i] = '\0';
-						inquotes = false;
-				}
-			}else if(inquotes){
-				continue;
-			}else if(!isspace(commands[i])){
-				if(inword == false){
-					argv[index] = &commands[i];
-					inword = true;
-					index++;
-				}
-			}else if(isspace(commands[i])){
-				if(inword){
-					inword = false;
-					commands[i] = '\0';
-				}
-			}
+		int count = parse_input(input, argv);
+			
+		//if builtin then continue otherwise exec
+		if(cd_builtin(&argv[0],count)){
+			continue;
 		}
-		argv[index] = NULL;
-
-		//getting sizeof argv[]
-		int count = 0;	
-		for(int i = 0; argv[i] != NULL; i++){
-			count++;
+		if(exit_builtin(&argv[0],count)){
+			continue;
 		}
-
-		//getting home dir
-		char *home;
-		home = getenv("HOME");
-		if(home == NULL){
-			puts("Could not get home directory");
-			strcpy(home,"/");
-		}
-
-		//cd function
-		if(strcmp(argv[0],"cd") == 0){	
-			if(count == 1){
-				chdir(home);
-			}else if(count == 3){
-				puts("cd: too many arguments");
-			}else{
-				chdir(argv[1]);
-			}
-		}
-		
-		//exit function
-		if(strcmp(argv[0],"exit") == 0){
-			if(count > 2){
-				puts("Too many arguments");
-			}else if(count == 2){
-				char *end;
-				int n = strtol(argv[1],&end, 10);
-				if(end == argv[1]){
-					puts("Enter integer value");
-				}else if(*end != '\0'){
-					puts("Enter integer value");
-				}else{
-					exit(n);
-				}
-			}else{
-				exit(0);
-			}
-		}
-
 
 		//forking and executing
 		int pid;
@@ -125,7 +60,7 @@ int main(){
 			execvp(argv[0],argv);
 		}
 
-		free(commands);	//getline	
+		free(input);	//getline	
 	}
 	return 0;	
 }
