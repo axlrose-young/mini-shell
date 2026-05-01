@@ -1,6 +1,6 @@
 #ifndef EXECUTOR_H
 #define EXECUTOR_H
 
-void executor(char *argv[]);
+int executor(char *argv[]);
 
 #endif

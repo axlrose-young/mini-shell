@@ -44,10 +44,7 @@ int main(){
 		}
 			
 		//builtins
-		if(cd_builtin(argv,count)){
-			continue;
-		}
-		if(exit_builtin(argv,count)){
+		if(handle_builtin(argv,count)==0){
 			continue;
 		}
 

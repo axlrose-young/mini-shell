@@ -1,7 +1,8 @@
 #ifndef BUILTIN_H
 #define BUILTIN_H
 
-int exit_builtin(char *argv[], int count);
-int cd_builtin(char *argv[], int count);
+void exit_builtin(char **argv, int count);
+void cd_builtin(char **argv, int count);
+int handle_builtin(char **argv, int count);
 
 #endif
