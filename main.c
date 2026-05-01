@@ -1,11 +1,11 @@
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
-#include <sys/wait.h>
+#include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include "parser.h"
 #include "builtin.h"
+#include "executor.h"
 
 extern int errno;
 
@@ -38,27 +38,21 @@ int main(){
 
 		//converting to individual commands (array of pointers)
 		char *argv[64];
-		int count = parse_input(input, argv);
-			
-		//if builtin then continue otherwise exec
-		if(cd_builtin(&argv[0],count)){
+		int count;
+		if((count = parse_input(input,argv)) == 0){
 			continue;
 		}
-		if(exit_builtin(&argv[0],count)){
+			
+		//builtins
+		if(cd_builtin(argv,count)){
+			continue;
+		}
+		if(exit_builtin(argv,count)){
 			continue;
 		}
 
 		//forking and executing
-		int pid;
-		pid = fork();
-		if(pid == -1){
-			perror("Error");
-			continue;
-		}else if(pid != 0){
-			wait(NULL);
-		}else{
-			execvp(argv[0],argv);
-		}
+		executor(argv);
 
 		free(input);	//getline	
 	}

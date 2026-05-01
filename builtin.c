@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include "builtin.h"
 
-int cd_builtin(char *argv[], int count){
+int cd_builtin(char **argv, int count){
 	if(strcmp(argv[0], "cd") != 0){
 		return 0;
 	}
@@ -15,9 +15,10 @@ int cd_builtin(char *argv[], int count){
 	}else{
 		chdir(argv[1]);
 	}
+	return 1;
 }
 
-int exit_builtin(char *argv[], int count){
+int exit_builtin(char **argv, int count){
 	if(strcmp(argv[0],"exit") != 0){
 		return 0;
 	}
@@ -36,5 +37,5 @@ int exit_builtin(char *argv[], int count){
 	}else{
 		exit(0);	
 	}
-		
+	return 1;	
 }

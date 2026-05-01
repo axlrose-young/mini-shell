@@ -32,6 +32,9 @@ int parse_input(char *input, char *argv[]){
 		}
 	}
 	argv[index] = NULL;
+	if(argv[0] == NULL){
+		return 0;
+	}
 	
 	return index; //returns count of argv
 }
