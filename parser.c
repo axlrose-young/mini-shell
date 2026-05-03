@@ -50,7 +50,7 @@ int parse_input(char *input,char* cmd[10][64]){
 		return 0;
 	}
 	for(int i = 0; argv[i] != NULL; i++){
-		if(argv[i] == "|"){
+		if(strcmp(argv[i],"|")==0){
 			for(int j=0; j < pos; j++){
 				cmd[cmd_pos][j] = temp[j];
 			}

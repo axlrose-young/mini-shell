@@ -5,7 +5,7 @@
 #include <errno.h>
 #include "parser.h"
 #include "builtin.h"
-//#include "executor.h"
+#include "executor.h"
 
 extern int errno;
 
@@ -54,7 +54,7 @@ int main(){
 		}
 
 		//forking and executing
-		//executor(argv);
+		executor(cmd);
 
 		free(input);	//getline	
 	}
