@@ -5,7 +5,8 @@
 
 //RETURN 0 IF ERROR
 
-int parse_input(char *input, char *argv[]){
+int parse_input(char *input,char* cmd[10][64]){
+	char* argv[64];
 	int index = 0;
 	bool inword = false;
 	bool inquotes = false;
@@ -41,10 +42,9 @@ int parse_input(char *input, char *argv[]){
 
 	
 	//pipe parser 
-	char* cmd[10][64];
 	int pos = 0;
 	int cmd_pos = 0;
-	char* temp[10];
+	char* temp[20];
 	if(strcmp(argv[0],"|")==0){
 		puts("cannot start with pipe");
 		return 0;
@@ -69,12 +69,12 @@ int parse_input(char *input, char *argv[]){
 			cmd[cmd_pos][j] = temp[j];
 		}
 		cmd[cmd_pos][pos] = NULL;
+		cmd_pos++;
 	}
 	else{
 		puts("cannot end in pipe");
 		return 0;
 	}
-
-	return index; //returns count of argv
+	cmd[cmd_pos][0] = NULL;
 }
 

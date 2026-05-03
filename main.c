@@ -5,7 +5,7 @@
 #include <errno.h>
 #include "parser.h"
 #include "builtin.h"
-#include "executor.h"
+//#include "executor.h"
 
 extern int errno;
 
@@ -37,19 +37,24 @@ int main(){
 		}
 
 		//converting to individual commands (array of pointers)
-		char *argv[64];
-		int count;
-		if((count = parse_input(input,argv)) == 0){
+		char* cmd[10][64] = { 0 };
+		if(parse_input(input,cmd) == 0){
 			continue;
 		}
 			
 		//builtins
-		if(handle_builtin(argv,count)==0){
-			continue;
+		int cmd_count = 0;
+		for(int i = 0; cmd[i][0] != NULL; i++){
+			cmd_count++;
+		}
+		if(cmd_count == 1){
+			if(handle_builtin(cmd)==0){
+				continue;
+			}
 		}
 
 		//forking and executing
-		executor(argv);
+		//executor(argv);
 
 		free(input);	//getline	
 	}
