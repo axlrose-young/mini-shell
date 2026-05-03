@@ -1,6 +1,9 @@
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 #include "parser.h"
+
+//RETURN 0 IF ERROR
 
 int parse_input(char *input, char *argv[]){
 	int index = 0;
@@ -35,6 +38,43 @@ int parse_input(char *input, char *argv[]){
 	if(argv[0] == NULL){
 		return 0;
 	}
+
 	
+	//pipe parser 
+	char* cmd[10][64];
+	int pos = 0;
+	int cmd_pos = 0;
+	char* temp[10];
+	if(strcmp(argv[0],"|")==0){
+		puts("cannot start with pipe");
+		return 0;
+	}
+	for(int i = 0; argv[i] != NULL; i++){
+		if(argv[i] == "|"){
+			for(int j=0; j < pos; j++){
+				cmd[cmd_pos][j] = temp[j];
+			}
+			cmd[cmd_pos][pos] = NULL;
+			cmd_pos++;
+			pos = 0;
+			memset(temp,'0',sizeof(temp));
+		}
+		else{
+			temp[pos] = argv[i];
+			pos++;
+		}
+	}
+	if(pos>0){
+		for(int j=0; j<pos; j++){
+			cmd[cmd_pos][j] = temp[j];
+		}
+		cmd[cmd_pos][pos] = NULL;
+	}
+	else{
+		puts("cannot end in pipe");
+		return 0;
+	}
+
 	return index; //returns count of argv
 }
+
