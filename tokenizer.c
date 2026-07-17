@@ -2,15 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#define ARG_MAX 256
+#include "tokenizer.h"
 
-typedef struct{
-	char* cmds[ARG_MAX];
-}Pipes;
-
-Pipes pipe[64] = { 0 };
+Pipes pipeline[64];
 
 void tokenize(char* input){
+	// clear the struct so previous values are not retained
+	memset(pipeline, 0, sizeof(pipeline)); 
+					      
 	// tokenize input based on whitespace
 	char* tokens[ARG_MAX]; 
 	tokens[0]= strtok(input, " ");		
@@ -25,61 +24,29 @@ void tokenize(char* input){
 	int cmd_index = 0;
 	for(int i = 0; tokens[i] != NULL; i++){
 		if(strcmp(tokens[i],"|")==0){
+			pipeline[i].cmds[cmd_index] = NULL; // NULL terminate current 
 			index++;
 			cmd_index = 0;
 		}
+		else if(strcmp(tokens[i], ">")==0){
+			pipeline[index].outfile = tokens[i+1];
+			i++; // skips the output file token
+		}
 		else{
-			pipe[index].cmds[cmd_index] = tokens[i];	
+			pipeline[index].count++;
+			pipeline[index].cmds[cmd_index] = tokens[i];	
 			cmd_index++;
 		}
 	}	
-	pipe[index].cmds[cmd_index] = NULL;
+	pipeline[index].cmds[cmd_index] = NULL;
 
-	for(int i = 0; pipe[i].cmds[0] != NULL; i++){
-		for(int j = 0; pipe[i].cmds[j] != NULL; j++){
-			printf("pipe %d: %s\n",i,pipe[i].cmds[j]);
+	for(int i = 0; pipeline[i].cmds[0] != NULL; i++){
+		printf("Count: %ld\n", pipeline[i].count);
+		for(int j = 0; pipeline[i].cmds[j] != NULL; j++){
+			printf("pipe %d cmd %d: %s\n",i,j,pipeline[i].cmds[j]);
+		}	
+		if(pipeline[i].outfile != 0){
+			printf("Outfile: %s\n",pipeline[i].outfile);	
 		}	
 	}
 }
-
-
-
-
-/*
-int parse_input(char *input, char *argv[]){
-	int index = 0;
-	bool inword = false;
-	bool inquotes = false;
-	for(int i = 0; input[i] != '\0'; i++){
-		if(input[i] == '"'){
-			if(inquotes == false){	//starting quotes
-				argv[index] = &input[i+1];
-				inquotes = true;
-				index++;
-			}else{	//ending quotes
-				input[i] = '\0';
-					inquotes = false;
-			}
-		}else if(inquotes){
-			continue;
-		}else if(!isspace(input[i])){
-			if(inword == false){
-				argv[index] = &input[i];
-				inword = true;
-				index++;
-			}
-		}else if(isspace(input[i])){
-			if(inword){
-				inword = false;
-				input[i] = '\0';
-			}
-		}
-	}
-	argv[index] = NULL;
-	if(argv[0] == NULL){
-		return 0;
-	}
-	
-	return index; //returns count of argv
-}
-*/

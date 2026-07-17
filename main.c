@@ -7,7 +7,6 @@
 //#include "executor.h"
 
 #define PATH_MAX 4096
-#define ARG_MAX 256
 
 void init_shell(){
 	// getting root user 
@@ -38,10 +37,9 @@ int main(){
 		if(input[0] == '\0')	continue;
 
 		/*
-		 tokenize the input 
-		 for multiple pipe handling arrays of arrays of char* is used 
+		 *tokenize the input 
+		 *for multiple pipe handling arrays of arrays of char* is used 
 		 */	
-		char** cmd[ARG_MAX];	
 		tokenize(input);
 
 		/*
