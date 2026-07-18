@@ -9,7 +9,8 @@ typedef struct{
 	size_t count;
 }Pipes;
 
-extern Pipes pipeline[64]; // directly used in tokenizer and main
+extern Pipes pipe_arr[64]; /* directly used in tokenizer and main */
+extern size_t ncmds;       /* tracks number of entries in pipe_arr */
 
 void tokenize(char *input);
 

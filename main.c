@@ -3,8 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "tokenizer.h"
-//#include "builtin.h"
-//#include "executor.h"
+#include "executor.h"
 
 #define PATH_MAX 4096
 
@@ -37,27 +36,14 @@ int main(){
 		if(input[0] == '\0')	continue;
 
 		/*
-		 *tokenize the input 
-		 *for multiple pipe handling arrays of arrays of char* is used 
+		 * tokenize the input 
+		 * array of structs handling pipes 
 		 */	
 		tokenize(input);
-
-		/*
-		int count;
-		if((count = parse_input(input,argv)) == 0){
-			continue;
-		}
-		*/
-		/*		
-		//builtins
-		if(handle_builtin(argv,count)==0){
-			continue;
-		}
-
-		//forking and executing
-		executor(argv);
-		*/
 		free(input);	//getline	
+
+		/* pass the array of structs and length */
+		exec_commands(pipe_arr, ncmds); 	
 	}
 	return 0;	
 }

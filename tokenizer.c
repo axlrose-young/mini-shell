@@ -4,11 +4,25 @@
 
 #include "tokenizer.h"
 
-Pipes pipeline[64];
+Pipes pipe_arr[64];
+size_t ncmds;
+
+void show_tokens(Pipes* p, size_t ncmds){
+	for(int i = 0; p[i].cmds[0] != NULL; i++){
+		printf("Count: %ld\n", p[i].count);
+		for(int j = 0; p[i].cmds[j] != NULL; j++){
+			printf("pipe %d cmd %d: %s\n",i,j,p[i].cmds[j]);
+		}	
+		if(p[i].outfile != 0){
+			printf("Outfile: %s\n",p[i].outfile);	
+		}	
+	}
+	printf("ncmds: %ld\n",ncmds);
+}
 
 void tokenize(char* input){
 	// clear the struct so previous values are not retained
-	memset(pipeline, 0, sizeof(pipeline)); 
+	memset(pipe_arr, 0, sizeof(pipe_arr)); 
 					      
 	// tokenize input based on whitespace
 	char* tokens[ARG_MAX]; 
@@ -24,29 +38,25 @@ void tokenize(char* input){
 	int cmd_index = 0;
 	for(int i = 0; tokens[i] != NULL; i++){
 		if(strcmp(tokens[i],"|")==0){
-			pipeline[i].cmds[cmd_index] = NULL; // NULL terminate current 
+			pipe_arr[i].cmds[cmd_index] = NULL; // NULL terminate current 
 			index++;
 			cmd_index = 0;
 		}
 		else if(strcmp(tokens[i], ">")==0){
-			pipeline[index].outfile = tokens[i+1];
+			pipe_arr[index].outfile = tokens[i+1];
 			i++; // skips the output file token
 		}
 		else{
-			pipeline[index].count++;
-			pipeline[index].cmds[cmd_index] = tokens[i];	
+			pipe_arr[index].count++; // counts number of tokens per pipe
+			pipe_arr[index].cmds[cmd_index] = tokens[i];	
 			cmd_index++;
 		}
 	}	
-	pipeline[index].cmds[cmd_index] = NULL;
+	//pipe_arr[index].cmds[cmd_index] = NULL;
 
-	for(int i = 0; pipeline[i].cmds[0] != NULL; i++){
-		printf("Count: %ld\n", pipeline[i].count);
-		for(int j = 0; pipeline[i].cmds[j] != NULL; j++){
-			printf("pipe %d cmd %d: %s\n",i,j,pipeline[i].cmds[j]);
-		}	
-		if(pipeline[i].outfile != 0){
-			printf("Outfile: %s\n",pipeline[i].outfile);	
-		}	
-	}
+	/* To count number of commands given */
+	ncmds = index + 1;
+
+	/* printing the tokenized o/p */
+	show_tokens(pipe_arr, ncmds);
 }

@@ -1,6 +1,6 @@
 #ifndef EXECUTOR_H
 #define EXECUTOR_H
 
-int executor(char *argv[]);
+void exec_commands(Pipes* p, size_t ncmds);
 
 #endif

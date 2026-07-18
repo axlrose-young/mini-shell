@@ -1,8 +1,32 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/wait.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 
+#include "tokenizer.h"
+
+void handle_redir(){
+	/*
+	 * open the file
+	 * duplicate the stdout as per open
+	 * close(fd) 	closes the last fd assigned to outfile
+	 */	
+	int redirect_fd = open(pipe_arr[0].outfile, O_CREAT | O_TRUNC | O_WRONLY);
+
+	if(redirect_fd == -1){
+		perror("Error opening file");	
+		exit(1);
+	}
+	dup2(redirect_fd, STDOUT_FILENO);
+	close(redirect_fd);	
+}
+
+void exec_commands(Pipes* p, size_t ncmds){
+
+	handle_redir();
+}
+
+/*
 int executor(char *argv[]){
 	int pid = fork();
 	if(pid == -1){
@@ -29,3 +53,4 @@ int executor(char *argv[]){
 	}
 	return 0;
 }
+*/
