@@ -24,6 +24,9 @@ void init_shell(){
 
 int main(){
 	while(true){
+		Pipes pipe_arr[64]; /* array of structs to store pipe info */
+		size_t ncmds; 	    /* used to store length of array */
+		
 		init_shell();	
 
 		// getting input
@@ -39,11 +42,11 @@ int main(){
 		 * tokenize the input 
 		 * array of structs handling pipes 
 		 */	
-		tokenize(input);
-		free(input);	//getline	
+		ncmds = tokenize(input, pipe_arr);
 
 		/* pass the array of structs and length */
 		exec_commands(pipe_arr, ncmds); 	
+		free(input);	//getline	
 	}
 	return 0;	
 }
