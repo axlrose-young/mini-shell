@@ -23,8 +23,10 @@ void apply_redir(Pipes* p, int index){
 void handle_cd(Pipes* p){
 	if(p->count == 1){
 		char* home = getenv("HOME");
-		if(home == NULL)	
-			strcpy(home, "??");
+		if(home == NULL){	
+			home = "/";
+			fprintf(stderr,"home not set\n");
+		}
 
 		if(chdir(home) == -1)
 			perror("chdir failed");	
