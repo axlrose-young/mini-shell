@@ -9,9 +9,8 @@
 
 #include "tokenizer.h"
 
-/*
-void apply_redir(Pipes* p){
-	int fd = open(p[0].outfile, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+void apply_redir(Pipes* p, int index){
+	int fd = open(p[index].outfile, O_CREAT | O_TRUNC | O_WRONLY, 0644);
 	if(fd < 0){
 		perror("file open");
 		exit(1);	
@@ -20,7 +19,6 @@ void apply_redir(Pipes* p){
 	dup2(fd, STDOUT_FILENO);
 	close(fd);
 }
-*/
 
 void handle_cd(Pipes* p){
 	if(p->count == 1){
@@ -78,6 +76,10 @@ void exec_commands(Pipes* p, size_t ncmds){
 			exit(1);	
 		}		
 		if(pid == 0){
+			if(p->outfile != NULL){
+				apply_redir(p, 0); // pass struct and index
+			}
+
 			execvp(p->cmds[0], p->cmds);
 			perror("exec error");
 			exit(1);
@@ -107,7 +109,11 @@ void exec_commands(Pipes* p, size_t ncmds){
 					dup2(pipefd[1], STDOUT_FILENO);
 					close(pipefd[0]);
 					close(pipefd[1]);
-					
+
+					if(p[i].outfile != NULL){
+						apply_redir(p, i);	
+					}
+
 					execvp(p[i].cmds[0], p[i].cmds);
 					perror("exec failed");
 					exit(1);	
@@ -116,9 +122,10 @@ void exec_commands(Pipes* p, size_t ncmds){
 
 				close(pipefd[1]);
 				old_read = pipefd[0];
-				//wait(NULL);
 			}	
-			else if(i == (int)(ncmds - 1)){	// last command 
+			else if(i == (int)(ncmds - 1)){	
+				/* last command don't have to create a pipe
+				   this command writes to terminal */
 				
 				pid_t pid = fork();
 				if(pid == -1){
@@ -130,12 +137,15 @@ void exec_commands(Pipes* p, size_t ncmds){
 					dup2(old_read, STDIN_FILENO);	
 					close(old_read);
 
+					if(p[i].outfile != NULL){
+						apply_redir(p, i);	
+					}
+
 					execvp(p[i].cmds[0], p[i].cmds);
 					perror("exec failed");
 					exit(1);	
 				}
 				close(old_read);
-				//wait(NULL);
 			}
 			else{				// commands in between 
 				int pipefd[2];
@@ -152,22 +162,32 @@ void exec_commands(Pipes* p, size_t ncmds){
 				}		
 
 				if(pid == 0){
+					/* dups prev read from prev pipe
+					   and rewires write */
 					dup2(old_read, STDIN_FILENO);
 					dup2(pipefd[1], STDOUT_FILENO);			
+					// closes all fds in the child
 					close(pipefd[0]);
 					close(pipefd[1]);
 					close(old_read);
+					
+					// applying redirects
+					if(p[i].outfile != NULL){
+						apply_redir(p, i);	
+					}
 
 					execvp(p[i].cmds[0], p[i].cmds);
 					perror("exec failed");
 					exit(1);
 				}
+				// free up prev read then reassign it 
 				close(old_read);	
 				close(pipefd[1]);
 				old_read = pipefd[0];
-				//wait(NULL);
 			}
 		}	
+		/* waits for all terminated child processes
+		   frees up zombie processes */
 		for(int i = 0; i < (int)ncmds; i++){
 			wait(NULL);	
 		}
