@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
+#include <errno.h>
 
 #include "tokenizer.h"
 
@@ -20,8 +22,56 @@ void apply_redir(Pipes* p){
 }
 */
 
+void handle_cd(Pipes* p){
+	if(p->count == 1){
+		char* home = getenv("HOME");
+		if(home == NULL)	
+			strcpy(home, "??");
+
+		if(chdir(home) == -1)
+			perror("chdir failed");	
+	}
+	else if(p->count > 2){
+		fprintf(stderr,"cd: too many args\n");
+	}
+	else {
+		if(chdir(p->cmds[1]) == -1)
+			perror("chdir failed");	
+	}	
+}
+
+void handle_exit(Pipes* p){
+	if(p->count > 2){
+		fprintf(stderr,"exit: too many args\n");	
+	}
+	else if(p->count == 2){
+		int status = strtol(p->cmds[1], NULL, 10);
+		exit(status);
+	}
+	else{
+		exit(1);
+	}
+}
+
+int handle_builtin(Pipes* p){
+	if(strcmp(p->cmds[0], "cd") == 0){	
+		handle_cd(p);
+		return 0;
+	}
+	else if(strcmp(p->cmds[0], "exit") == 0){
+		handle_exit(p);
+		return 0;
+	}
+	return 1;
+}
+
 void exec_commands(Pipes* p, size_t ncmds){
 	if(ncmds == 1){
+		// if first command a builtin 
+		if(handle_builtin(p) == 0){
+			return;	
+		}
+
 		pid_t pid = fork();
 		if(pid == -1){
 			perror("fork error");
@@ -66,7 +116,7 @@ void exec_commands(Pipes* p, size_t ncmds){
 
 				close(pipefd[1]);
 				old_read = pipefd[0];
-				wait(NULL);
+				//wait(NULL);
 			}	
 			else if(i == (int)(ncmds - 1)){	// last command 
 				
@@ -85,7 +135,7 @@ void exec_commands(Pipes* p, size_t ncmds){
 					exit(1);	
 				}
 				close(old_read);
-				wait(NULL);
+				//wait(NULL);
 			}
 			else{				// commands in between 
 				int pipefd[2];
@@ -115,8 +165,11 @@ void exec_commands(Pipes* p, size_t ncmds){
 				close(old_read);	
 				close(pipefd[1]);
 				old_read = pipefd[0];
-				wait(NULL);
+				//wait(NULL);
 			}
 		}	
+		for(int i = 0; i < (int)ncmds; i++){
+			wait(NULL);	
+		}
 	}
 }

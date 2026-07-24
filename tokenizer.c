@@ -51,11 +51,11 @@ size_t tokenize(char* input, Pipes* p){
 	}	
 	p[index].cmds[cmd_index] = NULL;
 
-	/* To count number of commands given */
+	// To count number of commands given 
 	size_t ncmds = index + 1;
 
-	/* uncomment line to print the tokenized o/p */
-	//show_tokens(p, ncmds); 
+     //	uncomment line to print the tokenized o/p 
+     //	show_tokens(p, ncmds); 
 
 
 	return ncmds;
