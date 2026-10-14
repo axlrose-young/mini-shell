@@ -2,19 +2,21 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include "tokenizer.h"
-#include "executor.h"
 
-#define PATH_MAX 4096
+#include "data.h"
 
-void init_shell(){
-	// getting root user 
+size_t tokenize(char*, struct Pipes*);
+void exec_commands(size_t ncmds, struct Pipes*);  
+
+void 
+init_shell()
+{
 	char* login = getenv("USER");
-	if(login == NULL)	login = "user";
+	if (login == NULL)		
+		login = "user";
 
-	// get current working dir
 	char dir[PATH_MAX];
-	if(getcwd(dir,PATH_MAX) == NULL){
+	if (getcwd(dir,PATH_MAX) == NULL) {
 		perror("Error");
 		strcpy(dir,"??");
 	}
@@ -22,11 +24,13 @@ void init_shell(){
 	printf("%s:%s$ ",login,dir);
 }
 
-int main(){
-	while(true){
-		Pipes pipe_arr[64]; /* array of structs to store pipe info */
-		size_t ncmds; 	    /* used to store length of array */
-		
+int 
+main()
+{
+	struct Pipes pipe_arr[64]; 	/* array of structs to store pipe info */
+	size_t ncmds = 0; 	    	/* used to store length of array */
+
+	while (true) {		
 		init_shell();	
 
 		// getting input
@@ -36,16 +40,14 @@ int main(){
 		getline(&input,&n,stdin);
 		input[strlen(input) - 1] = '\0';
 
-		if(input[0] == '\0')	continue;
-
-		/*
-		 * tokenize the input 
-		 * array of structs handling pipes 
-		 */	
+		if (input[0] == '\0')	
+			continue;
+			
 		ncmds = tokenize(input, pipe_arr);
 
 		/* pass the array of structs and length */
-		exec_commands(pipe_arr, ncmds); 	
+		exec_commands(ncmds, pipe_arr); 	
+
 		free(input);	//getline	
 	}
 	return 0;	

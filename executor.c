@@ -7,9 +7,11 @@
 #include <string.h>
 #include <errno.h>
 
-#include "tokenizer.h"
+#include "data.h"
 
-void apply_redir(Pipes* p, int index){
+static void 
+apply_redir(struct Pipes* p, int index)
+{
 	int fd = open(p[index].outfile, O_CREAT | O_TRUNC | O_WRONLY, 0644);
 	if(fd < 0){
 		perror("file open");
@@ -20,7 +22,9 @@ void apply_redir(Pipes* p, int index){
 	close(fd);
 }
 
-void handle_cd(Pipes* p){
+static void 
+handle_cd(struct Pipes* p)
+{
 	if(p->count == 1){
 		char* home = getenv("HOME");
 		if(home == NULL){	
@@ -40,7 +44,9 @@ void handle_cd(Pipes* p){
 	}	
 }
 
-void handle_exit(Pipes* p){
+static void 
+handle_exit(struct Pipes* p)
+{
 	if(p->count > 2){
 		fprintf(stderr,"exit: too many args\n");	
 	}
@@ -53,7 +59,9 @@ void handle_exit(Pipes* p){
 	}
 }
 
-int handle_builtin(Pipes* p){
+static int 
+handle_builtin(struct Pipes* p)
+{
 	if(strcmp(p->cmds[0], "cd") == 0){	
 		handle_cd(p);
 		return 0;
@@ -65,7 +73,9 @@ int handle_builtin(Pipes* p){
 	return 1;
 }
 
-void exec_commands(Pipes* p, size_t ncmds){
+void 
+exec_commands(size_t ncmds, struct Pipes* p)
+{
 	if(ncmds == 1){
 		// if first command a builtin 
 		if(handle_builtin(p) == 0){
